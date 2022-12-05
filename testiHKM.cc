@@ -31,10 +31,9 @@ void testiHKM()
     TCanvas *canv;
     TVirtualPad *vp;
     float pt,y,widthPt,widthY;
-    long int nEvents;
 
     TH1F *hMomentum = new TH1F("hMomentum","",50,0,5);
-    TH1F *hRapidity = new TH1F("hRapidity","",100,-5,5);
+    TH1F *hRapidity = new TH1F("hRapidity","",100,-5,5);    // w STARze nie robią rozkładu rapidity, więc chyba nie ma sensu tego robić
     TChain *chMain = new TChain(treeName.Data());
 
     for (int i = 0; i < noFiles; i++)
@@ -47,10 +46,10 @@ void testiHKM()
     TTreeReaderArray<float> pz(ttReader,"pz");
     TTreeReaderArray<float> E(ttReader,"E");
     TTreeReaderArray<int> id(ttReader,"id");
+    TTreeReaderArray<int> mid(ttReader,"mid");
 
     gBenchmark->Start("testiHKM");
 
-    nEvents = ttReader.GetEntries();
     widthPt = hMomentum->GetBinWidth(10);
     widthY = hRapidity->GetBinWidth(10);
 
@@ -58,21 +57,23 @@ void testiHKM()
     {
         for (int i = 0; i < *npart; i++)
         {
-            if (id[i] != 2212)
+            if (id[i] != 2212) // if not proton
+                continue;
+            if (mid[i] != 0) // if not primordial
                 continue;
 
             y = 0.5 * TMath::Log((E[i] + pz[i])/(E[i] - pz[i]));
             hRapidity->Fill(y);
-            if (TMath::Abs(y) < (widthY/2)) //midrapidity; has to be equal to rapidity bin width
+            if (TMath::Abs(y) < widthY) // midrapidity; has to be equal to rapidity bin width
             {
                 pt = sqrtf(px[i]*px[i] + py[i]*py[i]);
-                hMomentum->Fill(pt,1./pt);
+                hMomentum->Fill(pt,1./(pt));
             }  
         }
     }
 
-    hMomentum->Scale(1./(nEvents*2*TMath::Pi()*widthPt*widthY));
-    hRapidity->Scale(1./(nEvents*widthY));
+    hMomentum->Scale(1./(hMomentum->GetEntries()*2*TMath::Pi()*widthPt*widthY));
+    hRapidity->Scale(1./(hRapidity->GetEntries()*widthY));
 
     canv = new TCanvas("c","c",1600,800);
     canv->SetMargin(0.3,0.05,0.2,0.05);
@@ -81,13 +82,13 @@ void testiHKM()
     vp = canv->cd(1);
     vp->SetLogy();
     vp->SetMargin(0.2,0.05,0.1,0.1);
-    prepareGraph(hMomentum,"p_{t} distribution for protons;p_{t} [GeV/c]; #frac{1}{2 #pi} #frac{dN}{dp_{t} dy}|_{y=0}",2);
-    hMomentum->Draw("c");
+    prepareGraph(hMomentum,"p_{t} distribution for protons;p_{t} [GeV/c]; #frac{1}{2 #pi p_{t}} #frac{d^{2}N}{dp_{t} dy}|_{y=0} [(GeV/c)^{-2}]",2);
+    hMomentum->Draw("c hist");
 
     vp = canv->cd(2);
     vp->SetMargin(0.2,0.05,0.1,0.1);
     prepareGraph(hRapidity,"y distribution for protons;y [GeV/c];#frac{dN}{dy}",4);
-    hRapidity->Draw("c");
+    hRapidity->Draw("c hist");
 
     gBenchmark->Show("testiHKM");
 
