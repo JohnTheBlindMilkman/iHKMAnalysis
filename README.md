@@ -24,7 +24,6 @@ The repository showcases my journey towards that goal, focusing on p-p correlati
 
 ## Setup
 
-PLACEHOLDER 
 Setup couldn't be more simple. After cloning the repository cd to the working direcory and use make to complie the program:
 
 ```
@@ -34,8 +33,14 @@ $ make
 
 ## Bugs
 
-Placeholder
+1. The program breaks after saving the file. Reason is yet unknown.
 
 ## To-Do
 
-* Remove rapidity distributions from the study
+1. testiHKM.cc: 
+    - [ ] Remove rapidity distributions from the study
+2. therm2_femto.cxx: 
+    - [ ] Find the cause of Segmentation Violation
+    - [ ] Move methods to other classes
+    - [ ] Use std::vector instead of C arrays
+    - [ ] Allow to turn on and off all three interactions form the femto.ini file

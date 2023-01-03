@@ -1,6 +1,9 @@
 *.d
 *.so
 *.pcm
+*.tmp
+*.log
+*.root
 .vscode
 RootIncludes
 therm2_femto
