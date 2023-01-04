@@ -33,14 +33,12 @@ $ make
 
 ## Bugs
 
-1. The program breaks after saving the file. Reason is yet unknown.
-
 ## To-Do
 
-1. testiHKM.cc: 
+### testiHKM.cc: 
     - [ ] Remove rapidity distributions from the study
-2. therm2_femto.cxx: 
-    - [ ] Find the cause of Segmentation Violation
+### therm2_femto.cxx: 
+    - [x] Find the cause of Segmentation Violation
     - [ ] Move methods to other classes
     - [ ] Use std::vector instead of C arrays
     - [ ] Allow to turn on and off all three interactions form the femto.ini file

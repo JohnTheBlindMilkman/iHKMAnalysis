@@ -187,7 +187,9 @@ void Parser::ReadSHAREDecays(ParticleDB* aDB)
 	aDB->GetParticleType(tFather)->SetDecayChannelCount3( aDB->GetParticleType(tFather)->GetDecayChannelCount3() + 1 );
 	PRINT_DEBUG_2("\t\tAdding 3-body decay channel:     "<< tDaughter1 <<" + "<< tDaughter2 <<" + "<< tDaughter3);
       } else
+      {
         PRINT_DEBUG_2("\t\tNOT adding 3-body decay channel: "<< tDaughter1 <<" + "<< tDaughter2 <<" + "<< tDaughter3 <<", extra mass = "<< aDB->GetParticleType(tDaughter1)->GetMass() + aDB->GetParticleType(tDaughter2)->GetMass() + aDB->GetParticleType(tDaughter3)->GetMass() - aDB->GetParticleType(tFather)->GetMass());
+      }
     } else {
 // 2-body decay
       tBRatio=atof(tDaughter3);
@@ -227,7 +229,9 @@ void Parser::ReadSHAREDecays(ParticleDB* aDB)
         aDB->GetParticleType(tFather)->SetDecayChannelCount2( aDB->GetParticleType(tFather)->GetDecayChannelCount2() + 1 );
         PRINT_DEBUG_2("\t\tAdding 2-body decay channel:     "<< tDaughter1 <<" + "<< tDaughter2);
       } else
+      {
         PRINT_DEBUG_2("\t\tNOT adding 2-body decay channel: "<< tDaughter1 <<" + "<< tDaughter2 <<", extra mass = "<< aDB->GetParticleType(tDaughter1)->GetMass() + aDB->GetParticleType(tDaughter2)->GetMass() - aDB->GetParticleType(tFather)->GetMass());
+      }
     }
     delete iss;
   }

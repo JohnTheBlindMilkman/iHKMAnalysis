@@ -28,14 +28,14 @@ endif
 # compilation
 CXX         = g++
 LD          = g++
-CXXFLAGS    = -std=c++11 -O0 -g -Wno-deprecated -Wno-return-type -I $(DIR_H) $(PREPROCESS) `root-config --cflags`
+CXXFLAGS    = -std=c++11 -O0 -g -Wall -Wextra -Wpedantic -I $(DIR_H) $(PREPROCESS) `root-config --cflags`
 LFLAGS      = -lm -g `root-config --libs`
 
 #################################################################################
 # RULES                                                                         #
 #################################################################################
  
-all: $(BIN_FEMTO:%=$(DIR_OBJ)%) $(BIN_Q2:%=$(DIR_OBJ)%)
+all: $(BIN_FEMTO:%=$(DIR_OBJ)%)
 	cp $^ $(DIR_MAIN)
 	echo
 	echo "Ready!"
@@ -57,7 +57,6 @@ clean:
 	rm -f $(DIR_MAC)*.so
 	rm -f $(DIR_MAC)*.pcm
 	rm -f $(DIR_OBJ)$(BIN_FEMTO) $(DIR_MAIN)$(BIN_FEMTO)
-	rm -f $(DIR_OBJ)$(BIN_Q2) $(DIR_MAIN)$(BIN_Q2)
 	echo "*.o, *.so, *.d, *.pcm and binary files removed."
 
 .SILENT :

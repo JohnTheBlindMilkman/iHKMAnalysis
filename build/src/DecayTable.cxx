@@ -30,80 +30,81 @@
 
 DecayTable::DecayTable()
 {
-  mDecayChannels.clear();
-  mBranchingRatios.clear();
+    mDecayChannels.clear();
+    mBranchingRatios.clear();
 }
 
 DecayTable::DecayTable(const DecayTable& aTable)
 {
-  mDecayChannels.clear();
-  mBranchingRatios.clear();
-  for (int tIter=0; tIter<aTable.GetChannelCount(); tIter++)
-    AddDecayChannel( *(aTable.GetDecayChannel(tIter)) );
+    mDecayChannels.clear();
+    mBranchingRatios.clear();
+    for (int tIter=0; tIter<aTable.GetChannelCount(); tIter++)
+        AddDecayChannel( *(aTable.GetDecayChannel(tIter)) );
 }
 
 DecayTable::~DecayTable()
 {
-  mDecayChannels.clear();
-  mBranchingRatios.clear();
+    mDecayChannels.clear();
+    mBranchingRatios.clear();
 }
 
 void DecayTable::AddDecayChannel(DecayChannel aChannel)
 {
-  mDecayChannels.push_back(aChannel);
-  RecalculateBranchingRatios();
+    mDecayChannels.push_back(aChannel);
+    RecalculateBranchingRatios();
 }
 
 void DecayTable::RecalculateBranchingRatios()
 {
-  float tSumRatio = 0.0;
-  float tCurRatio = 0.0;
+    float tSumRatio = 0.0;
+    float tCurRatio = 0.0;
 
-  for (int tIter=0; tIter<mDecayChannels.size(); tIter++)
-    tSumRatio += mDecayChannels[tIter].GetBranchingRatio();
+    for (size_t tIter=0; tIter<mDecayChannels.size(); tIter++)
+        tSumRatio += mDecayChannels[tIter].GetBranchingRatio();
 
-  for (int tIter=0; tIter<mDecayChannels.size(); tIter++) {
-    tCurRatio += mDecayChannels[tIter].GetBranchingRatio() / tSumRatio;
-    if (mBranchingRatios.size() <= tIter)
-      mBranchingRatios.push_back(tCurRatio);
-    else
-      mBranchingRatios[tIter] = tCurRatio;
-  }
+    for (size_t tIter=0; tIter<mDecayChannels.size(); tIter++) 
+    {
+        tCurRatio += mDecayChannels[tIter].GetBranchingRatio() / tSumRatio;
+        if (mBranchingRatios.size() <= tIter)
+        mBranchingRatios.push_back(tCurRatio);
+        else
+        mBranchingRatios[tIter] = tCurRatio;
+    }
 }
 
 int DecayTable::GetChannelCount() const
 {
-  return mDecayChannels.size() - 1;
+    return mDecayChannels.size() - 1;
 }
 
 
 const DecayChannel* DecayTable::GetDecayChannel(int aIndex) const
 {
-  return &(mDecayChannels[aIndex]);
+    return &(mDecayChannels[aIndex]);
 }
 
 float DecayTable::GetDecayStep(int aIndex)
 {
-  return mBranchingRatios[aIndex];
+    return mBranchingRatios[aIndex];
 }
 
 int DecayTable::ChooseDecayChannel(double aProb)
 {
-  int tChanIndex = 0;
-  while ((mBranchingRatios[tChanIndex] < aProb) && (tChanIndex < mDecayChannels.size()))
-    tChanIndex++;
+    size_t tChanIndex = 0;
+    while ((mBranchingRatios[tChanIndex] < aProb) && (tChanIndex < mDecayChannels.size()))
+        tChanIndex++;
 
-  return tChanIndex;
+    return (int) tChanIndex;
 }
 
 int DecayTable::ChooseDecayChannelOrNot(double aProb)
 {
-  float tSumRatio = 0.0;
+    float tSumRatio = 0.0;
 
-  for (int tIter=0; tIter<mDecayChannels.size(); tIter++) {
-    if ((aProb > tSumRatio) && (aProb <= tSumRatio+mDecayChannels[tIter].GetBranchingRatio()))
-      return tIter;
-    tSumRatio += mDecayChannels[tIter].GetBranchingRatio();
-  }
-  return -1;
+    for (size_t tIter=0; tIter<mDecayChannels.size(); tIter++) {
+        if ((aProb > tSumRatio) && (aProb <= tSumRatio+mDecayChannels[tIter].GetBranchingRatio()))
+            return (int) tIter;
+        tSumRatio += mDecayChannels[tIter].GetBranchingRatio();
+    }
+    return -1;
 }
