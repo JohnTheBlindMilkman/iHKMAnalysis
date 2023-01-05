@@ -83,7 +83,7 @@ void Messages::Summary(double low, double high, vector<TString> files, vector<Su
         if(!files.empty())
         {
             PRINT_MESSAGE("Files that were not found: ");
-            for(auto it = begin(files); it != end(files); it++)
+            for(auto it : files)
             {
                 PRINT_MESSAGE(*it);
             }
@@ -99,15 +99,15 @@ void Messages::Summary(double low, double high, vector<TString> files, vector<Su
             
             PRINT_MESSAGE("Fits outside bounds, where lambda is not in (" << low << ", " << high << "):");
             PRINT_MESSAGE("                   " << "kT bin" << "            " << "Lambda Inv" << "        " << "Lambda OSL");
-            for(auto it = begin(su); it != end(su); it++)
+            for(auto it : su)
             {
                 inv = ' ';
                 osl = ' ';
-                if(it->Linv)
+                if(it.Linv)
                     inv = '+';
-                if(it->Losl)
+                if(it.Losl)
                     osl = '+';
-                PRINT_MESSAGE("                     " << it->kT << "             " << inv << "                   " << osl);
+                PRINT_MESSAGE("                     " << it.kT << "             " << inv << "                   " << osl);
             }
         }
     }

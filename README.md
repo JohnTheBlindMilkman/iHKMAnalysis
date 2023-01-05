@@ -44,6 +44,8 @@ $ make
     - [ ] Allow to turn on and off all three interactions form the femto.ini file
     - [ ] Move as many parameters as possible (and reasonable) to femto.ini
     - [ ] Store the parameters inside output .root file in a TTree (1 entry and multiple branches)
+### therm2_hbtfit.cxx:
+    - [ ] Save CF and FIT of Rinv to output hbtfitpipi0a.root files
 ### drawHBT.cc:
     - [ ] Create a macro for drawing HBT Radii rependence
 ### drawCorr.cc:
