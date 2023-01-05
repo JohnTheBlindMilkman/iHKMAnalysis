@@ -42,3 +42,9 @@ $ make
     - [ ] Move methods to other classes
     - [ ] Use std::vector instead of C arrays
     - [ ] Allow to turn on and off all three interactions form the femto.ini file
+    - [ ] Move as many parameters as possible (and reasonable) to femto.ini
+    - [ ] Store the parameters inside output .root file in a TTree (1 entry and multiple branches)
+### drawHBT.cc:
+    - [ ] Create a macro for drawing HBT Radii rependence
+### drawCorr.cc:
+    - [ ] Create a macro fro drawing correlation functions

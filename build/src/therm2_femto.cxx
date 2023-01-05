@@ -259,11 +259,13 @@ int main(int argc, char **argv)
     try 
     {
         TString tPairType;
-        tPairType = tMainConfig->GetParameter("PairType");
-        if (tPairType == "pion-pion")	   
+        tPairType = tMainConfig->GetParameter("PairType"); 
+        if (tPairType == "pion-pion") // this could be done with enum - JJ	        
             pairtype = 0;
         else if (tPairType == "kaon-kaon")	   
             pairtype = 1;
+        else if (tPairType == "proton-proton")
+            pairtype = 2;
         else 
         {
             PRINT_MESSAGE("therm2_femto Unknown pair type: " << tPairType);
@@ -320,7 +322,7 @@ int main(int argc, char **argv)
         break;
     case 3:
         ktmin = 0.45;
-        ktmax = 0.6;
+        ktmax = 0.55;
         break;
     case 10:
         ktmin = 0.2;
@@ -477,17 +479,17 @@ int main(int argc, char **argv)
         break;
     }
 
-    if (docoulomb) {
+    if (docoulomb) 
         InitializeGamow();
-    }
-    else {
+    else 
+    {
         twospin = 0;
         if (pairtype == 0) 
-        partpid = PIPID;
+            partpid = PIPID;
         else if (pairtype == 1) 
-        partpid = KPID;
+            partpid = KPID;
         else if (pairtype == 2) 
-        partpid = PPID;
+            partpid = PPID;
     }
 
 // ##############################################################
@@ -679,12 +681,11 @@ int main(int argc, char **argv)
 
     //TChain *chn   = new TChain(_PARTICLES_TREE_); JJ
     TChain *chnEv = new TChain(_EVENTS_TREE_);
-    TChain *chnEv2;
     int pcount = 0;
     
     for(int i = 0; i < tEventFiles; i++) 
     {
-        char Buff[kFileNameMaxChar];
+        char Buff[kFileNameMaxChar]; // this could be a TString... - JJ
         sprintf(Buff,"%s%d.root",sEventDir.Data(),i);
         PRINT_DEBUG_1("Adding file: " << Buff);
         //chn->Add(Buff); JJ
@@ -703,21 +704,6 @@ int main(int argc, char **argv)
     TTreeReaderArray<float> x(ttReader,"x");
     TTreeReaderArray<float> y(ttReader,"y");
     TTreeReaderArray<float> z(ttReader,"z");
-
-    chnEv2 = (TChain*) chnEv->Clone();
-
-    TTreeReader ttReader2(chnEv2); //maybe there is a better way of doing this... - JJ
-    TTreeReaderValue<int> npart2(ttReader,"npart");
-    TTreeReaderArray<float> px2(ttReader,"px");
-    TTreeReaderArray<float> py2(ttReader,"py");
-    TTreeReaderArray<float> pz2(ttReader,"pz");
-    TTreeReaderArray<float> E2(ttReader,"E");
-    TTreeReaderArray<int> id2(ttReader,"id");
-    TTreeReaderArray<int> mid2(ttReader,"mid");
-    TTreeReaderArray<float> t2(ttReader,"t");
-    TTreeReaderArray<float> x2(ttReader,"x");
-    TTreeReaderArray<float> y2(ttReader,"y");
-    TTreeReaderArray<float> z2(ttReader,"z");
   
     //Int_t npart		= (int) chn->GetEntries(); JJ
     int   tEventIter	= 1;
@@ -726,10 +712,10 @@ int main(int argc, char **argv)
     //it must be initialized
     //chn->SetBranchAddress(_PARTICLE_BRANCH_,&buf); JJ
 
-    if(tNumberOfEvents<20000) 
+    if(tNumberOfEvents<1000) 
     {
         PRINT_MESSAGE("WARNING The number of events read ("<<tNumberOfEvents<<") may be not sufficient, statistics is too low.");
-        PRINT_MESSAGE("In order to get more stable results please use at least 20000 - 50000 events.");
+        PRINT_MESSAGE("In order to get more stable results please use at least 1000 - 5000 events.");
     } 
   
 // ##############################################################
@@ -829,7 +815,7 @@ int main(int argc, char **argv)
                                             
                                             if (docoulomb) 
                                             {
-                                                if (fabs(evbuf[eviter][fiter].t - evbuf[mixiter][siter].t) > 500.0) // was zum Fick? - JJ
+                                                if (fabs(evbuf[eviter][fiter].t - evbuf[mixiter][siter].t) > 500.0)
                                                 {
                                                     coulombweight = 1.0;
                                                     coulqscpart = 1.0;
@@ -948,7 +934,6 @@ int main(int argc, char **argv)
                     evtscount2[eviter] = 0;
                 }      
                 cout.flush();
-                tEventIter++;
             }
 
             if (((id[trackIter] == partpid) || ((id[trackIter] == partpid2) && (partpid2 !=0))) && (t[trackIter] < tcut)) 
@@ -1006,6 +991,7 @@ int main(int argc, char **argv)
             }
         }
         curev = eventid;
+        tEventIter++;
     }
   
 // ##############################################################
@@ -1017,12 +1003,14 @@ int main(int argc, char **argv)
         sprintf(bufs, "%sfemtopipi%i%s.root",sEventDir.Data(), nbin, onlyprim ? "p" : "a");
     else if (pairtype == 1)
         sprintf(bufs, "%sfemtokaka%i%s.root",sEventDir.Data(), nbin, onlyprim ? "p" : "a");
+    else if (pairtype == 2)
+        sprintf(bufs, "%sfemtopp%i%s.root",sEventDir.Data(), nbin, onlyprim ? "p" : "a");
 
     TFile *ofile = new TFile();
     ofile = TFile::Open(bufs, "RECREATE"); // ROOT files should be opened this way - JJ
     ofile->cd();
 
-    if (pairtype == 0) 
+    if ((pairtype == 0) || (pairtype == 2)) // if is a pion or proton - JJ
     {
         cnuma->Write();
         cdena->Write();
@@ -1037,7 +1025,7 @@ int main(int argc, char **argv)
             num1dqsc->Write();
             num1dc->Write();
         }
-    }
+   }
 
     if (pairtype != 0) 
     {
