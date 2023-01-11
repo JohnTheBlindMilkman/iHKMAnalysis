@@ -9,3 +9,4 @@ RootIncludes
 therm2_femto
 therm2_hbtfit
 build/obj/*
+macros/output/*

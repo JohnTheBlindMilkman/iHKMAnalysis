@@ -32,6 +32,7 @@ $ make
 ```
 
 ## Bugs
+* The error bars get scaled by the applied weight, which means that the same function will have different error bars for different interactions included. Which is wrong of course. 
 
 ## To-Do
 
@@ -46,7 +47,10 @@ $ make
     - [ ] Store the parameters inside output .root file in a TTree (1 entry and multiple branches)
 ### therm2_hbtfit.cxx:
     - [ ] Save CF and FIT of Rinv to output hbtfitpipi0a.root files
-### drawHBT.cc:
-    - [ ] Create a macro for drawing HBT Radii rependence
-### drawCorr.cc:
-    - [ ] Create a macro fro drawing correlation functions
+    - [ ] Make it distinguishible which interactions are included in the correlation function of the output files
+### figureHBT.cc:
+    - [x] Create a macro for drawing HBT Radii rependence
+### figureCorr.cc:
+    - [x] Create a macro fro drawing correlation functions
+    - [ ] Add 1D option
+    - [ ] Add option for different interactions

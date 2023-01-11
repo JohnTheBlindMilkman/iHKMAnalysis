@@ -243,15 +243,15 @@ int main(int argc, char **argv)
         Messages::HelpFmt();
         return _ERROR_GENERAL_FILE_NOT_FOUND_;
     }
-  
-  Messages::Intro();
+    Messages::Intro();
+
 // ##############################################################
 // # Read configuration file (femto.ini)			#
 // ##############################################################
-  Configurator* tMainConfig	= new Configurator;
-  Parser* 	tParser		= new Parser(sMainINI);
-  tParser->ReadINI(tMainConfig);
-  delete tParser;
+    Configurator* tMainConfig	= new Configurator;
+    Parser* 	tParser		= new Parser(sMainINI);
+    tParser->ReadINI(tMainConfig);
+    delete tParser;
   
 // ##############################################################
 // # ReadParameters						#
