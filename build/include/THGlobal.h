@@ -45,7 +45,7 @@ static const int NoParams = 7;
 static const int projWidth[] = {0,4,10};
 
 static const TString sParNames[NoParams] = {"LambdaInv","Rinv","Norm","LambdaOSL","Rout","Rside","Rlong"};
-static const TString sProjNames[] = {"out","side","long"};
+static const TString sProjNames[] = {"out","side","long","inv"};
 // Define version of THERMINATOR 2
 
 #define _THERMINATOR2_VERSION_  "2.1.1"

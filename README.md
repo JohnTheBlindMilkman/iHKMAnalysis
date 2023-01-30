@@ -48,6 +48,7 @@ $ make
 ### therm2_hbtfit.cxx:
     - [ ] Save CF and FIT of Rinv to output hbtfitpipi0a.root files
     - [ ] Make it distinguishible which interactions are included in the correlation function of the output files
+    - [ ] Add proper error calculation
 ### figureHBT.cc:
     - [x] Create a macro for drawing HBT Radii rependence
 ### figureCorr.cc:

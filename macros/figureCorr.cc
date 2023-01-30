@@ -23,7 +23,7 @@ void figureCorr()
     gStyle->SetOptStat(0);
 
     TString filePath = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/ic/output/urqmd/";
-    const int kTset[] = {0,3};
+    const int kTset[] = {0};
     const int len = sizeof(kTset)/sizeof(kTset[1]);
     const TString projName[] = {"out", "side", "long"};
     const Color_t cGreen = TColor::GetColor(26,201,33);

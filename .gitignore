@@ -6,6 +6,7 @@
 *.root
 .vscode
 RootIncludes
+HALincludes
 therm2_femto
 therm2_hbtfit
 build/obj/*

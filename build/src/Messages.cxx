@@ -58,11 +58,8 @@ void Messages::HelpEvnts()
 void Messages::HelpFmt()
 {
     PRINT_MESSAGE("Usage: ");
-    PRINT_MESSAGE("therm2_femto <KTBIN> <EVENT_DIR> <EVENT_FILES> [FEMTO_INI] [PPID]");
+    PRINT_MESSAGE("therm2_femto [FEMTO_INI] [PPID]");
     PRINT_MESSAGE("therm2_femto [OPTION]");
-    PRINT_MESSAGE("  <KTBIN>\t\tnumber of the kT bin");
-    PRINT_MESSAGE("  <EVENT_DIR>\t\tdirectory with event*.root files");
-    PRINT_MESSAGE("  <EVENT_FILES>\t\tnumber of event*.root files to include");
     PRINT_MESSAGE("  [FEMTO_INI]\t\tmain settings file;\t\tdefault: femto.ini");
     PRINT_MESSAGE("  [PPID]\t\tparent's system process ID;\tdefault: 0");
     PRINT_MESSAGE("  [OPTION]");

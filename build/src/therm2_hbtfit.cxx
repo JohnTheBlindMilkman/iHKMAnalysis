@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     HBTFit *hbtFit;
     Storage *store;
     TH3D *ratq;
-    TH1D *ratq1,*hExpProj[3][3],*hFitProj[3][3];
+    TH1D *ratq1,*fitq1,*hExpProj[3][3],*hFitProj[3][3];
     TF3 *funqg,*funqk;
     TF1 *funqg1,*funqk1;
     TDatime tDate;
@@ -291,9 +291,10 @@ int main(int argc, char **argv)
         denq1 = new TH1D(*((TH1D *) tInRootFile->Get(denname1d)));
         ratq1 = new TH1D(*numq1);
         ratq1->Reset("ICE");
-        ratq1->Divide(numq1, denq1, 1.0, 1.0);
+        ratq1->Divide(numq1, denq1, 1.0, 1.0); 
         ratq1->SetName("ratq1");
         ratq1->SetTitle("ratq1");
+        hbtFit->setErrors(ratq1,numq1,denq1);
         ratq1->Fit(funqk1, "RBMPE");
 
         numq = new TH3D(*((TH3D *) tInRootFile->Get(numname)));
@@ -303,6 +304,7 @@ int main(int argc, char **argv)
         ratq->Divide(numq, denq, 1.0, 1.0);
         ratq->SetName("ratq");
         ratq->SetTitle("ratq");
+        hbtFit->setErrors(ratq,numq,denq);
         ratq->Fit(funqk, "RBMPE");
 
 // ##############################################################
@@ -366,6 +368,9 @@ int main(int argc, char **argv)
         int padItr = 1;
 
         TH3D *fitnq = hbtFit->getfitprojc(denq, funqk);
+        TH1D *fitnq1 = hbtFit->getfitprojc(denq1,funqk1);
+        fitq1 = hbtFit->getFitHisto(denq1,funqk1);
+        hbtFit->setErrors(fitq1,fitnq1,denq1);
 
         TCanvas *cancf = new TCanvas ("cancf", "cancf", 1200, 1200);
         gPad->SetFillColor(0);
@@ -387,6 +392,10 @@ int main(int argc, char **argv)
                 padItr++;
             }
 
+        TCanvas *cancf1 = new TCanvas ("cancf1","cancf1",1200,1200);
+        hbtFit->preparehist(ratq1,3,3,"CF");
+        hbtFit->preparehist(fitq1,3,3,"FIT");
+        hbtFit->preparepad(ratq1,fitq1);
 // ##############################################################
 // # Save plots							
 // ##############################################################   
@@ -398,12 +407,18 @@ int main(int argc, char **argv)
         tOutRootFile = TFile::Open(tOutRootName,"RECREATE");
         tOutRootFile->cd();
 
+        cancf->Write();
+        cancf1->Write();
+
         for(int jj = 0; jj < 3; jj++)
             for(int kk = 0; kk < 3; kk++)
             {
                 hExpProj[jj][kk]->Write();
                 hFitProj[jj][kk]->Write();
             }
+        
+        ratq1->Write();
+        fitq1->Write();
 
         tOutRootFile->Close();
         tInRootFile->Close();
@@ -412,6 +427,7 @@ int main(int argc, char **argv)
         PRINT_MESSAGE("\tfile "<<tOutRootName<<" written.");
 
         delete cancf;
+        delete cancf1;
 
 // ##############################################################
 // # Log file entry 						

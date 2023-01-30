@@ -202,46 +202,33 @@ int main(int argc, char **argv)
 // ##############################################################
 // # Command line analysis					#
 // ##############################################################
-  int tEventFiles;
-  sParentPID = 0;
+    int tEventFiles;
+    sParentPID = 0;
+    sMainINI = "./femto.ini";
 
-    if (argc > 3) 
+    if (argc > 2) 
     {
-        nbin	= atoi(argv[1]);
-        sEventDir	= argv[2];
-        tEventFiles	= atoi(argv[3]);
-        if (argc > 4) 
-        {
-            sMainINI	= argv[4];
-            if(sMainINI.IsDigit()) 
-            {
-                sParentPID = sMainINI.Atoi();
-                sMainINI   = "./femto.ini";
-            }
-        } 
-        else
-            sMainINI	= "./femto.ini";
-        if (argc > 5)
-            sParentPID = atoi(argv[5]);
+        sMainINI	= argv[1];
+        sParentPID = atoi(argv[2]);
     } 
-    else 
+    else if (argc > 1) 
     {
-        if (argc > 1) 
+        sMainINI = argv[1];
+        if(sMainINI.Contains("-h") || sMainINI.Contains("--help")) 
         {
-            sMainINI = argv[1];
-            if(sMainINI.Contains("-h") || sMainINI.Contains("--help")) 
-            {
-                Messages::HelpFmt();
-                return 0;
-            }
-            if(sMainINI.Contains("-v") || sMainINI.Contains("--version")) 
-            {
-                Messages::Version();
-                return 0;
-            }    
+            Messages::HelpFmt();
+            return 0;
         }
-        Messages::HelpFmt();
-        return _ERROR_GENERAL_FILE_NOT_FOUND_;
+        else if(sMainINI.Contains("-v") || sMainINI.Contains("--version")) 
+        {
+            Messages::Version();
+            return 0;
+        }  
+        else if(!(sMainINI.Contains("femto.ini")))
+        {
+            Messages::HelpFmt();
+            return _ERROR_GENERAL_FILE_NOT_FOUND_;
+        }    
     }
     Messages::Intro();
 
@@ -275,6 +262,9 @@ int main(int argc, char **argv)
 
         tcut	= tMainConfig->GetParameter("TimeCut").Atof();
         evtomix	= tMainConfig->GetParameter("EventsToMix").Atoi();
+        sEventDir = tMainConfig->GetParameter("InputDir");
+        nbin = tMainConfig->GetParameter("KtBin").Atoi();
+        tEventFiles = tMainConfig->GetParameter("EventFiles").Atoi();
 
         if(tMainConfig->GetParameter("EnableOnlyPrimordial") == "yes") //this can be redone with one-line if-else statement - jj
             onlyprim = 1;

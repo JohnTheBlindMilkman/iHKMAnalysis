@@ -23,6 +23,26 @@ TH3D* HBTFit::getfitprojc(TH3D *expden, TF3 *funqk)
     return projhist;
 }
 
+TH1D* HBTFit::getfitprojc(TH1D *expden, TF1 *funqk)
+{
+    TH1D *projhist = new TH1D(*expden);
+
+    for(int iter = 1; iter <= expden->GetNbinsX(); iter++)
+        projhist->SetBinContent(iter,expden->GetBinContent(iter) * funqk->Eval(expden->GetBinCenter(iter)));
+
+    return projhist;
+}
+
+TH1D* HBTFit::getFitHisto(TH1D *expden, TF1 *funqk)
+{
+    TH1D *projhist = new TH1D(*expden);
+
+    for(int iter = 1; iter <= expden->GetNbinsX(); iter++)
+        projhist->SetBinContent(iter,funqk->Eval(expden->GetBinCenter(iter)));
+
+    return projhist;
+}
+
 void HBTFit::preparepad(TH1D *hExp, TH1D* hFit)
 {
     gPad->SetFillStyle(4000);
@@ -38,7 +58,7 @@ void HBTFit::preparepad(TH1D *hExp, TH1D* hFit)
 
 void HBTFit::preparehist(TH1D *hist, int projType, int wType, TString type)
 {
-    if(projType < 0 || projType > 2 || wType < 1 || wType > 3)
+    if(projType < 0 || projType > 3 || wType < 1 || wType > 3)
     {
         PRINT_MESSAGE("<HBTFit::preparehist>: Unknown projection type or width");
         exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
@@ -71,6 +91,46 @@ void HBTFit::preparehist(TH1D *hist, int projType, int wType, TString type)
     }
 
     hist->SetName(Form("%sproj_%s_%d",type.Data(),sProjNames[projType].Data(),wType));
+}
+
+void HBTFit::setErrors(TH1D *hout, TH1D *hNum, TH1D *hDen)
+{
+    const int iterMax = hout->GetNbinsX();
+    double vErr = 0, vNum = 0, vDen = 0, eNum = 0, eDen = 0;
+    for (int i = 1; i <= iterMax; i++)
+    {
+        vErr = 0;
+        vNum = hNum->GetBinContent(i);
+        eNum = hNum->GetBinError(i);
+        vDen = hDen->GetBinContent(i);
+        eDen = hDen->GetBinError(i);
+
+        // if F = x/y dF = sqrt(dx^2/y^2 + x^2dy^2/y^4 - 2xdxdy/y^3)
+        if (fabs(vDen) > std::numeric_limits<double>::epsilon()) // make sure we don't divide by 0
+            vErr = TMath::Sqrt((eNum*eNum)/(vDen*vDen) + ((vNum*vNum)*(eDen*eDen))/(vDen*vDen*vDen*vDen) - (2*vNum*eNum*eDen)/(vDen*vDen*vDen));
+        hout->SetBinError(i,vErr);
+    }
+}
+
+void HBTFit::setErrors(TH3D *hout, TH3D *hNum, TH3D *hDen)
+{
+    const int iterX = hout->GetNbinsX(), iterY = hout->GetNbinsY(), iterZ = hout->GetNbinsZ();
+    double vErr = 0, vNum = 0, vDen = 0, eNum = 0, eDen = 0;
+    for (int xx = 1; xx <= iterX; xx++)
+        for (int yy = 1; yy <= iterY; yy++)
+            for (int zz = 1; zz <= iterZ; zz++)
+            {
+                vErr = 0;
+                vNum = hNum->GetBinContent(xx,yy,zz);
+                eNum = hNum->GetBinError(xx,yy,zz);
+                vDen = hDen->GetBinContent(xx,yy,zz);
+                eDen = hDen->GetBinError(xx,yy,zz);
+
+                // if F = x/y dF = sqrt(dx^2/y^2 + x^2dy^2/y^4 - 2xdxdy/y^3)
+                if (fabs(vDen) > std::numeric_limits<double>::epsilon()) // make sure we don't divide by 0
+                    vErr = TMath::Sqrt((eNum*eNum)/(vDen*vDen) + ((vNum*vNum)*(eDen*eDen))/(vDen*vDen*vDen*vDen) - (2*vNum*eNum*eDen)/(vDen*vDen*vDen));
+                hout->SetBinError(xx,yy,zz,vErr);
+            }
 }
 
 TH1D* HBTFit::getproj(TH3D *numq, TH3D *denq, int nproj, int wbin, double norm)
@@ -119,16 +179,17 @@ TH1D* HBTFit::getproj(TH3D *numq, TH3D *denq, int nproj, int wbin, double norm)
     hproj->Sumw2();
     hproj->Reset("ICE");
     hproj->Divide(numbuf, denbuf, 1.0, 1.0, "");
+    //this->setErrors(hproj,numbuf,denbuf);
 
-    for (int iter=1; iter<hproj->GetNbinsX(); iter++)
+    /*for (int iter=1; iter<hproj->GetNbinsX(); iter++)
         if (numbuf->GetBinContent(iter)) 
         {
             Double_t dn = numbuf->GetBinError(iter);
             Double_t an = numbuf->GetBinContent(iter);
             Double_t dd = denbuf->GetBinError(iter);
             Double_t ad = denbuf->GetBinContent(iter);
-            hproj->SetBinError(iter, TMath::Sqrt((dn*dn*ad*ad + dd*dd*an*an + dd*dd*dn*dn)/(ad*ad*ad*ad)));
-        }
+            hproj->SetBinError(iter, TMath::Sqrt((dn*dn*ad*ad + dd*dd*an*an + dd*dd*dn*dn)/(ad*ad*ad*ad))); // change this to match testHBT (set global erros and don't do them on projection) - JJ
+        }*/
 
     hproj->Scale(intdexp/intnexp);
 
@@ -142,7 +203,7 @@ Double_t HBTFit::fungek(Double_t *x, Double_t *par)
     Double_t qlsq = x[2]*x[2];
     Double_t lam =  TMath::Abs(par[1]);
 
-    Double_t gpart = exp((-par[2]*par[2]*qosq-par[3]*par[3]*qssq-par[4]*par[4]*qlsq)/0.038938);
+    Double_t gpart = exp((-par[2]*par[2]*qosq-par[3]*par[3]*qssq-par[4]*par[4]*qlsq)/0.038938); // make it a constant? - JJ
 
     return (par[0] * (1 + lam*gpart));
 }
