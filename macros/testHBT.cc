@@ -46,13 +46,14 @@ void testHBT()
 {
     gStyle->SetOptStat(0);
 
-    const TString filepath = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/ic/output/urqmd/femtopp19a.root";
+    const TString filepath = "/home/jedkol/Downloads/HADES/data/iHKM/femtopp19a.root";
+    const TString outFilePath = "/home/jedkol/Downloads/HADES/iHKM/macros/output/femtoProton.root";
     const double hXmin = 0.0, hXmax = 0.2;
     const int tcBlue = TColor::GetColor("#2d7f9d"), tcRed = TColor::GetColor("#dc7684");
     
     TH1D *hDen,*hNumQ,*hNumQSC,*hRatQ,*hRatQSC;
     TLine *lLine;
-    TFile *inpFile;
+    TFile *inpFile, *outFile;
 
     TCanvas *canv = new TCanvas("canv","",800,450);
 
@@ -60,8 +61,10 @@ void testHBT()
     hDen = (TH1D*) inpFile->Get("den1d");
     hNumQ = (TH1D*) inpFile->Get("num1d");
     hRatQ = new TH1D(*hNumQ);
+    hRatQ->SetName("rat1d");
     hNumQSC = (TH1D*) inpFile->Get("num1dqsc");
     hRatQSC = new TH1D(*hNumQSC);
+    hRatQSC->SetName("rat1dqsc");
 
     hRatQ->Divide(hDen);
     SetErrors(hRatQ,hNumQ,hDen);
@@ -82,5 +85,8 @@ void testHBT()
     hRatQSC->Draw("p same");
     lLine->Draw("same");
 
+    outFile = TFile::Open(outFilePath,"recreate");
+    hRatQ->Write();
+    hRatQSC->Write();
     canv->SaveAs("./output/canv1Dpp.png");
 }

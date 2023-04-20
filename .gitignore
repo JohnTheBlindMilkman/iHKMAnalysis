@@ -7,6 +7,7 @@
 .vscode
 RootIncludes
 HALincludes
+femto_mixer
 therm2_femto
 therm2_hbtfit
 build/obj/*

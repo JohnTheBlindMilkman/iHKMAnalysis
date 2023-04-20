@@ -34,7 +34,7 @@
 
 using namespace std;
 
-Configurator::Configurator()
+Configurator::Configurator() : mParameters(0)
 {
   mParameters.clear();
 }
@@ -55,9 +55,9 @@ TString Configurator::GetParameter(const char* aKeyword) noexcept(false)
   throw *(new TString(aKeyword));
 }
 
-void Configurator::AddParameter(Parameter* aPar)
+void Configurator::AddParameter(Parameter aPar)
 {
-  mParameters.push_back(*aPar);
+  mParameters.push_back(aPar);
 }
 
 int Configurator::PrintParameters()

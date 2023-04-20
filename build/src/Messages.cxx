@@ -7,7 +7,7 @@ using namespace std;
 void Messages::Intro()
 {
     PRINT_MESSAGE("  ***********************************************************************"	);
-    PRINT_MESSAGE("  *\t\tTHERMINATOR 2 EVENTS version "<<_THERMINATOR2_VERSION_<<"\t\t\t*"	);
+    PRINT_MESSAGE("  *\t\tTHERMINATOR 2 EVENTS version "<<THGlobal::therminatorVersion<<"\t\t\t*"	);
     PRINT_MESSAGE("  *\t\t\t\t\t\t\t\t\t*"							);
     PRINT_MESSAGE("  * authors: M.Chojnacki, A.Kisiel, W.Florkowski, W.Broniowski\t\t*"		);
     PRINT_MESSAGE("  * cite as: arXiv:1102.0273\t\t\t\t\t\t*"					);
@@ -114,10 +114,10 @@ void Messages::Summary(double low, double high, vector<TString> files, vector<Su
 
 void Messages::Version()
 {
-    PRINT_MESSAGE("version:\t"<<_THERMINATOR2_VERSION_);
+    PRINT_MESSAGE("version:\t"<<THGlobal::therminatorVersion);
     PRINT_MESSAGE("compiled with:");
-    PRINT_MESSAGE("\t\t"<<_CXX_VER_);
-    PRINT_MESSAGE("\t\tROOT("<<_ROOT_VER_<<")");
+    PRINT_MESSAGE("\t\t"<<THGlobal::cxxVersion);
+    PRINT_MESSAGE("\t\tROOT("<<THGlobal::rootVersion<<")");
     #ifdef _DEBUG_LEVEL_
         PRINT_MESSAGE("DEBUG=\t"<<_DEBUG_LEVEL_);
     #endif

@@ -18,7 +18,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    Configurator* sMainConfig;
+    Configurator sMainConfig;
     HBTFit *hbtFit;
     Storage *store;
     TH3D *ratq;
@@ -28,8 +28,8 @@ int main(int argc, char **argv)
     TDatime tDate;
     TString tInRootName,numname,denname,numname1d,denname1d,partName,sMainINI,sPairType,sEventDir,sTimeStamp,sOvvr;
     bool losl,linv;
-    int minkT,maxkT,firstkT,stepkT,dofix[NoParams];
-    double lowCut,highCut,lambda,pars[NoParams],parmin[NoParams],parmax[NoParams],maxrange,maxx=0.0, maxy=0.0, maxz=0.0;
+    int minkT,maxkT,firstkT,stepkT,dofix[THGlobal::NoParams];
+    double lowCut,highCut,lambda,pars[THGlobal::NoParams],parmin[THGlobal::NoParams],parmax[THGlobal::NoParams],maxrange,maxx=0.0, maxy=0.0, maxz=0.0;
     vector<Messages::Summ> outOfBound;
     vector<TString> missFiles;
 
@@ -83,21 +83,21 @@ int main(int argc, char **argv)
                         {
                             PRINT_DEBUG_1("Command line: wrong kT order");
                             PRINT_MESSAGE("Error: kTmin is greater than kTmax");
-                            return _ERROR_FEMTO_WRONG_KT_ORDER_;
+                            return THGlobal::Error::femtoWrongkTOrder;
                         }
                     }
                     else
                     {
                         PRINT_DEBUG_1("Command line: kTmax = NAN");
                         PRINT_MESSAGE("Error: kTmax is not a number");
-                        return _ERROR_FEMTO_WRONG_KT_ORDER_;
+                        return THGlobal::Error::femtoWrongkTOrder;
                     }
                 }
                 else
                 {
                     PRINT_DEBUG_1("Command line: kTmin = NAN");
                     PRINT_MESSAGE("Error: kTmin is not a number");
-                    return _ERROR_FEMTO_WRONG_KT_ORDER_;
+                    return THGlobal::Error::femtoWrongkTOrder;
                 }
                 sMainINI = "./hbtfit.ini";
             }
@@ -105,13 +105,13 @@ int main(int argc, char **argv)
             {
                 PRINT_DEBUG_1("Command line: unknown pair type");
                 PRINT_MESSAGE("Error: Unknown pair type");
-                return _ERROR_FEMTO_UNKNOWN_PAIRTYPE_;
+                return THGlobal::Error::femtoUnknownPairType;
             }
         } 
         else
         {
             PRINT_MESSAGE("Error: unknown argument " + tInRootName);
-            return _ERROR_GENERAL_FILE_NOT_FOUND_;
+            return THGlobal::Error::generalFileNotFound;
         }
         if (argc > 5)
             sMainINI = argv[5];
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     else 
     {
         Messages::HelpHbt();
-        return _ERROR_GENERAL_FILE_NOT_FOUND_;
+        return THGlobal::Error::generalFileNotFound;
     }
 
     Messages::Intro();  
@@ -130,9 +130,8 @@ int main(int argc, char **argv)
 // # Read configuration file (femtoFit.ini)			
 // ############################################################## 
 
-    sMainConfig = new Configurator;
     Parser* tParser = new Parser(sMainINI);
-    tParser->ReadINI(sMainConfig);
+    sMainConfig = tParser->ReadINI();
     delete tParser;
   
 // ##############################################################
@@ -141,37 +140,37 @@ int main(int argc, char **argv)
 
     try 
     {
-        for(int i = 0; i < NoParams; i++)
-            accss->GetParameter(sMainConfig,sParNames[i],&pars[i], &dofix[i], &parmin[i], &parmax[i]);
+        for(int i = 0; i < THGlobal::NoParams; i++)
+            accss->GetParameter(sMainConfig,THGlobal::sParNames[i],&pars[i], &dofix[i], &parmin[i], &parmax[i]);
 
-        maxrange = sMainConfig->GetParameter("MaxFitRange").Atof();
-        numname  = sMainConfig->GetParameter("Numerator");
-        denname  = sMainConfig->GetParameter("Denominator");
-        numname1d  = sMainConfig->GetParameter("Numerator1D");
-        denname1d  = sMainConfig->GetParameter("Denominator1D");
-        firstkT = sMainConfig->GetParameter("FirstkT").Atoi();
-        stepkT = sMainConfig->GetParameter("WidthkT").Atoi();
-        sOvvr = sMainConfig->GetParameter("Override");
+        maxrange = sMainConfig.GetParameter("MaxFitRange").Atof();
+        numname  = sMainConfig.GetParameter("Numerator");
+        denname  = sMainConfig.GetParameter("Denominator");
+        numname1d  = sMainConfig.GetParameter("Numerator1D");
+        denname1d  = sMainConfig.GetParameter("Denominator1D");
+        firstkT = sMainConfig.GetParameter("FirstkT").Atoi();
+        stepkT = sMainConfig.GetParameter("WidthkT").Atoi();
+        sOvvr = sMainConfig.GetParameter("Override");
     }
     catch (TString &tError) 
     {
         PRINT_DEBUG_1("therm2_hbtfit - Caught exception " << tError);
         PRINT_MESSAGE("Did not find one of the necessary parameters in the parameters file.");
-        exit(_ERROR_CONFIG_PARAMETER_NOT_FOUND_);
+        exit(THGlobal::Error::configParameterNotFound);
     }
     try 
     {
-        maxx = sMainConfig->GetParameter("MaxFitRangeX").Atof();
-        maxy = sMainConfig->GetParameter("MaxFitRangeY").Atof();
-        maxz = sMainConfig->GetParameter("MaxFitRangeZ").Atof();
+        maxx = sMainConfig.GetParameter("MaxFitRangeX").Atof();
+        maxy = sMainConfig.GetParameter("MaxFitRangeY").Atof();
+        maxz = sMainConfig.GetParameter("MaxFitRangeZ").Atof();
     }
     catch (TString &tError) 
     {
     }
     try 
     {
-        lowCut = sMainConfig->GetParameter("LambdaCutLow").Atof();
-        highCut = sMainConfig->GetParameter("LambdaCutHigh").Atof();
+        lowCut = sMainConfig.GetParameter("LambdaCutLow").Atof();
+        highCut = sMainConfig.GetParameter("LambdaCutHigh").Atof();
     }
     catch (TString &tError) 
     {
@@ -189,7 +188,7 @@ int main(int argc, char **argv)
         
         try 
         {
-            tLogName = sMainConfig->GetParameter("LogFile");
+            tLogName = sMainConfig.GetParameter("LogFile");
         }
         catch (TString &tError) 
         {
@@ -217,10 +216,10 @@ int main(int argc, char **argv)
     TFile* tInRootFile = new TFile();
     TH3D *numq,*denq;
     TH1D *numq1,*denq1;
-    TGraphErrors *gFitRes[NoParams];
-    vector<double> parVals[NoParams];
-    vector<double> parErrs[NoParams];
-    vector<double> kTVal[NoParams];
+    TGraphErrors *gFitRes[THGlobal::NoParams];
+    vector<double> parVals[THGlobal::NoParams];
+    vector<double> parErrs[THGlobal::NoParams];
+    vector<double> kTVal[THGlobal::NoParams];
     int iter2;
 
     funqg = new TF3("funqg",hbtFit, &HBTFit::fungek, -0.15, 0.15, -0.15, 0.15, -0.15, 0.15, 5);
@@ -230,7 +229,7 @@ int main(int argc, char **argv)
         funqg->SetRange(-maxrange, -maxrange, -maxrange, maxrange, maxrange, maxrange);
     
     funqk = funqg;
-    for (int iter = 2; iter < NoParams; iter++)
+    for (int iter = 2; iter < THGlobal::NoParams; iter++)
     {
         iter2 = iter-2;
         if (dofix[iter]) 
@@ -246,7 +245,7 @@ int main(int argc, char **argv)
         else
             funqk->SetParameter(iter2, pars[iter]);
 
-        funqk->SetParName(iter2, sParNames[iter]);
+        funqk->SetParName(iter2, THGlobal::sParNames[iter]);
     }
 
     funqg1 = new TF1("funqg1",hbtFit, &HBTFit::fungek1D, -0.15, 0.15, 3);
@@ -271,7 +270,7 @@ int main(int argc, char **argv)
         else
             funqk1->SetParameter(iter, pars[iter]);
 
-        funqk1->SetParName(iter, sParNames[iter]);
+        funqk1->SetParName(iter, THGlobal::sParNames[iter]);
     }
     
     for(int ii = minkT; ii <= maxkT; ii++)
@@ -323,7 +322,7 @@ int main(int argc, char **argv)
             store = new Storage(tOutTextName);
 
         PRINT_DEBUG_1("Fit results:");
-        for (int iter = 0; iter < NoParams; iter++)
+        for (int iter = 0; iter < THGlobal::NoParams; iter++)
         {
             if(iter < 3)
             {
@@ -340,7 +339,7 @@ int main(int argc, char **argv)
                     lambda = parVal;
             }
 
-            store->appendToTxt(sParNames[iter],parVal,parErr);
+            store->appendToTxt(THGlobal::sParNames[iter],parVal,parErr);
             if(lambda > lowCut && lambda < highCut)
             {
                 kTVal[iter].push_back(firstkT+(ii-minkT)*stepkT);
@@ -380,8 +379,8 @@ int main(int argc, char **argv)
         for(int jj = 0; jj < 3; jj++)
             for(int kk = 0; kk < 3; kk++)
             {
-                hExpProj[jj][kk] = hbtFit->getproj(numq, denq, jj, projWidth[kk], pars[0]);
-                hFitProj[jj][kk] = hbtFit->getproj(fitnq, denq, jj, projWidth[kk], pars[0]);
+                hExpProj[jj][kk] = hbtFit->getproj(numq, denq, jj, THGlobal::projWidth[kk], pars[0]);
+                hFitProj[jj][kk] = hbtFit->getproj(fitnq, denq, jj, THGlobal::projWidth[kk], pars[0]);
 
                 hbtFit->preparehist(hExpProj[jj][kk],jj,kk+1,"CF");
                 hbtFit->preparehist(hFitProj[jj][kk],jj,kk+1,"FIT");
@@ -441,7 +440,7 @@ int main(int argc, char **argv)
             
             try 
             {
-                tLogName = sMainConfig->GetParameter("LogFile");
+                tLogName = sMainConfig.GetParameter("LogFile");
             }
             catch (TString &tError) 
             {
@@ -479,16 +478,16 @@ int main(int argc, char **argv)
         else
         {
             PRINT_MESSAGE("Unable to create temp file "<<tTmpFileName);
-            exit(_ERROR_GENERAL_FILE_NOT_FOUND_);
+            exit(THGlobal::Error::generalFileNotFound);
         }
     }
 
     TFile *paramFile = new TFile();
     paramFile = TFile::Open(Form("%sparameterFit%s.root",sEventDir.Data(),partName.Data()),"RECREATE");
-    for (int iter = 0; iter < NoParams; iter++) 
+    for (int iter = 0; iter < THGlobal::NoParams; iter++) 
     {
         gFitRes[iter] = new TGraphErrors(kTVal[iter].size(),&kTVal[iter][0],&parVals[iter][0],0,&parErrs[iter][0]);
-        gFitRes[iter]->Write(Form("g%s_%i_%i",sParNames[iter].Data(),minkT,maxkT));
+        gFitRes[iter]->Write(Form("g%s_%i_%i",THGlobal::sParNames[iter].Data(),minkT,maxkT));
     }
     
     paramFile->Close();

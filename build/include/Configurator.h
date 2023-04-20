@@ -45,7 +45,7 @@ class Configurator {
     ~Configurator();
 
     TString GetParameter(const char* aKeyword) noexcept(false);
-    void    AddParameter(Parameter* aPar);
+    void    AddParameter(Parameter aPar);
     int     PrintParameters();
 
   private:    

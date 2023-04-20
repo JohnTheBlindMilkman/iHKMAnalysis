@@ -41,7 +41,7 @@ class Parser {
     Parser(const char* aFileName);
     ~Parser();
 
-    void   ReadINI(Configurator* aINI);
+    Configurator ReadINI();
     void   ReadSHAREParticles(ParticleDB* aDB);
     void   ReadSHAREDecays(ParticleDB* aDB);
     void   ReadXML(Hypersurface_Library* aXML);

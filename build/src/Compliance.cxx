@@ -15,14 +15,14 @@ Compliance::Compliance(TString sModFilePath, TString sModName, TString sExpFileP
     if(!mEFile->IsOpen() || mEFile->IsZombie()) 
     {
         PRINT_MESSAGE("<Compliance::Compliance>\tFile "<<sExpFilePath<<" not found.");
-        exit(_ERROR_GENERAL_FILE_NOT_FOUND_);
+        exit(THGlobal::Error::generalFileNotFound);
     }
 
     mMFile = TFile::Open(sModFilePath);
     if(!mMFile->IsOpen() || mMFile->IsZombie()) 
     {
         PRINT_MESSAGE("<Compliance::Compliance>\tFile "<<sModFilePath<<" not found.");
-        exit(_ERROR_GENERAL_FILE_NOT_FOUND_);
+        exit(THGlobal::Error::generalFileNotFound);
     }
 
     mMod = (TGraphAsymmErrors*) mMFile->Get(sModName);
@@ -31,7 +31,7 @@ Compliance::Compliance(TString sModFilePath, TString sModName, TString sExpFileP
     if(mMod == nullptr || mExp == nullptr)
     {
         PRINT_MESSAGE("<Compliance::Compliance>\tGraphs are null");
-        exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
+        exit(THGlobal::Error::generalunsuportedValue);
     }
 
     mEventDir = Accessibility::getEventDir(sModFilePath);
@@ -86,7 +86,7 @@ double Compliance::printResult(TString testType, bool moreInfo)
     else
     {
         PRINT_MESSAGE("<Compliance::printResult>\tUnknown test type:" << testType)
-        exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
+        exit(THGlobal::Error::generalFileNotFound);
     }
 
     return testRes;
@@ -102,7 +102,7 @@ bool Compliance::getModelName(TString expName, int iter, int minkT, int maxkT, T
     if(iter > 1)
         iter++;
     
-    modName = TString::Format("g%s_%i_%i",sParNames[iter].Data(),minkT,maxkT);
+    modName = TString::Format("g%s_%i_%i",THGlobal::sParNames[iter].Data(),minkT,maxkT);
     return true;
 }
 

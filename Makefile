@@ -17,6 +17,11 @@ BIN_FEMTO  = therm2_femto
 HSRC_FEMTO = Parser.cxx Configurator.cxx ParticleDB.cxx ParticleType.cxx DecayTable.cxx DecayChannel.cxx Messages.cxx
 SRC_FEMTO  = $(HSRC_FEMTO:%=$(DIR_CXX)%) $(BIN_FEMTO:%=$(DIR_CXX)%.cxx)
 OBJ_FEMTO  = $(SRC_FEMTO:$(DIR_CXX)%.cxx=$(DIR_OBJ)%.o)
+# FEMTO_MIXER
+BIN_MIXER  = femto_mixer
+HSRC_MIXER = Parser.cxx Configurator.cxx MixingManager.cxx FemtoInteraction.cxx IOManager.cxx FileIO.cxx ParticleDB.cxx ParticleType.cxx DecayTable.cxx DecayChannel.cxx
+SRC_MIXER  = $(HSRC_MIXER:%=$(DIR_CXX)%) $(BIN_MIXER:%=$(DIR_CXX)%.cxx)
+OBJ_MIXER  = $(SRC_MIXER:$(DIR_CXX)%.cxx=$(DIR_OBJ)%.o)
 # THERM2_HBTFIT
 BIN_HBTFIT  = therm2_hbtfit
 HSRC_HBTFIT = Parser.cxx Configurator.cxx ParticleDB.cxx ParticleType.cxx DecayTable.cxx DecayChannel.cxx Accessibility.cxx Compliance.cxx Messages.cxx Storage.cxx HBTFit.cxx
@@ -41,15 +46,20 @@ LFLAGS      = -lm -g `root-config --libs`
 # RULES                                                                         #
 #################################################################################
  
-all: $(BIN_FEMTO:%=$(DIR_OBJ)%) $(BIN_HBTFIT:%=$(DIR_OBJ)%)
+all: $(BIN_FEMTO:%=$(DIR_OBJ)%) $(BIN_HBTFIT:%=$(DIR_OBJ)%) $(BIN_MIXER:%=$(DIR_OBJ)%)
 	cp $^ $(DIR_MAIN)
 	echo
 	echo "Ready!"
 	echo "Type \"./therm2_femto\" to generate two-particle corelation function"
+	echo "Type \"./femto_mixer\" to generate two-particle corelation function [EXPERIMENTAL]"
 	echo "Type \"./therm2_hbtfit\" to fit and extract HBT radii"
 	echo
 
 $(DIR_OBJ)therm2_femto: $(OBJ_FEMTO)
+	echo "Linking:   $@ ($(LD))"
+	$(LD) $^ -o $@ $(LFLAGS)
+
+$(DIR_OBJ)femto_mixer: $(OBJ_MIXER)
 	echo "Linking:   $@ ($(LD))"
 	$(LD) $^ -o $@ $(LFLAGS)
 
@@ -68,6 +78,7 @@ clean:
 	rm -f $(DIR_MAC)*.so
 	rm -f $(DIR_MAC)*.pcm
 	rm -f $(DIR_OBJ)$(BIN_FEMTO) $(DIR_MAIN)$(BIN_FEMTO)
+	rm -f $(DIR_OBJ)$(BIN_MIXER) $(DIR_MAIN)$(BIN_MIXER)
 	rm -f $(DIR_OBJ)$(BIN_HBTFIT) $(DIR_MAIN)$(BIN_HBTFIT)
 	echo "*.o, *.so, *.d, *.pcm and binary files removed."
 

@@ -42,6 +42,8 @@
 #include <TProfile.h>
 #include <TMath.h>
 #include <TDatime.h>
+#include <TBenchmark.h>
+#include <TROOT.h>
 #include "ParticleCoor.h"
 #include "StructEvent.h"
 #include "Configurator.h"
@@ -182,6 +184,8 @@ void		CopyINIFile();
 
 int main(int argc, char **argv)
 {
+    //ROOT::EnableImplicitMT();
+
   Int_t evtomix = 20;
   Double_t tcut = TMAX;
   euler = 0.577215665;
@@ -196,6 +200,7 @@ int main(int argc, char **argv)
   int onlyprim;// = 0;
   int docoulomb;
 
+    TBenchmark *bench = new TBenchmark();
   TDatime tDate;
   tDate.Set();
   sTimeStamp = tDate.AsSQLString();
@@ -227,7 +232,7 @@ int main(int argc, char **argv)
         else if(!(sMainINI.Contains("femto.ini")))
         {
             Messages::HelpFmt();
-            return _ERROR_GENERAL_FILE_NOT_FOUND_;
+            return THGlobal::Error::generalFileNotFound;
         }    
     }
     Messages::Intro();
@@ -235,9 +240,9 @@ int main(int argc, char **argv)
 // ##############################################################
 // # Read configuration file (femto.ini)			#
 // ##############################################################
-    Configurator* tMainConfig	= new Configurator;
+    //Configurator* tMainConfig	= new Configurator;
     Parser* 	tParser		= new Parser(sMainINI);
-    tParser->ReadINI(tMainConfig);
+    Configurator tMainConfig = tParser->ReadINI();
     delete tParser;
   
 // ##############################################################
@@ -246,7 +251,7 @@ int main(int argc, char **argv)
     try 
     {
         TString tPairType;
-        tPairType = tMainConfig->GetParameter("PairType"); 
+        tPairType = tMainConfig.GetParameter("PairType"); 
         if (tPairType == "pion-pion") // this could be done with enum - JJ	        
             pairtype = 0;
         else if (tPairType == "kaon-kaon")	   
@@ -257,26 +262,26 @@ int main(int argc, char **argv)
         {
             PRINT_MESSAGE("therm2_femto Unknown pair type: " << tPairType);
             PRINT_MESSAGE("Please provide the proper pair name in the main INI file.");
-            exit(_ERROR_FEMTO_UNKNOWN_PAIRTYPE_);
+            exit(THGlobal::Error::femtoUnknownPairType);
         }
 
-        tcut	= tMainConfig->GetParameter("TimeCut").Atof();
-        evtomix	= tMainConfig->GetParameter("EventsToMix").Atoi();
-        sEventDir = tMainConfig->GetParameter("InputDir");
-        nbin = tMainConfig->GetParameter("KtBin").Atoi();
-        tEventFiles = tMainConfig->GetParameter("EventFiles").Atoi();
+        tcut	= tMainConfig.GetParameter("TimeCut").Atof();
+        evtomix	= tMainConfig.GetParameter("EventsToMix").Atoi();
+        sEventDir = tMainConfig.GetParameter("InputDir");
+        nbin = tMainConfig.GetParameter("KtBin").Atoi();
+        tEventFiles = tMainConfig.GetParameter("EventFiles").Atoi();
 
-        if(tMainConfig->GetParameter("EnableOnlyPrimordial") == "yes") //this can be redone with one-line if-else statement - jj
+        if(tMainConfig.GetParameter("EnableOnlyPrimordial") == "yes") //this can be redone with one-line if-else statement - jj
             onlyprim = 1;
         else
             onlyprim = 0;
 
-        if(tMainConfig->GetParameter("EnableCoulombCorrection") == "yes")
+        if(tMainConfig.GetParameter("EnableCoulombCorrection") == "yes")
             docoulomb = 1;
         else
             docoulomb = 0;
 
-        if(tMainConfig->GetParameter("EnableSourceHistograms") == "yes")
+        if(tMainConfig.GetParameter("EnableSourceHistograms") == "yes")
             writesourcehists = 1;
         else
             writesourcehists = 0;
@@ -285,7 +290,7 @@ int main(int argc, char **argv)
     {
         PRINT_DEBUG_1("therm2_femto - Caught exception " << tError);
         PRINT_MESSAGE("Did not find one of the necessary parameters in the parameters file.");
-        exit(_ERROR_CONFIG_PARAMETER_NOT_FOUND_);
+        exit(THGlobal::Error::configParameterNotFound);
     }
     
     CopyINIFile();
@@ -607,7 +612,7 @@ int main(int argc, char **argv)
         time2 = new TH1D("time2", "Emission time particle2;t [fm/c]; dN/dt", 100, 0.0, 50.0);
     }
 
-    num1d->Sumw2();
+    num1d->Sumw2(); // it is easier to just turn on the flag TH1::SetDeflautSumw2=kTrue 
     num1dqsc->Sumw2();
     num1dc->Sumw2();
     den1d->Sumw2();
@@ -675,7 +680,7 @@ int main(int argc, char **argv)
     
     for(int i = 0; i < tEventFiles; i++) 
     {
-        char Buff[kFileNameMaxChar]; // this could be a TString... - JJ
+        char Buff[THGlobal::kFileNameMaxChar]; // this could be a TString... - JJ
         sprintf(Buff,"%s%d.root",sEventDir.Data(),i);
         PRINT_DEBUG_1("Adding file: " << Buff);
         //chn->Add(Buff); JJ
@@ -717,7 +722,7 @@ int main(int argc, char **argv)
     
     try 
     {
-        tLogName = tMainConfig->GetParameter("LogFile");
+        tLogName = tMainConfig.GetParameter("LogFile");
     }
     catch (TString &tError) 
     {}   
@@ -751,6 +756,8 @@ int main(int argc, char **argv)
     Double_t pt, rap, peta;
     double coulombweight;
     double quantumweight;
+
+    bench->Start("mixing");
     
     while (ttReader.Next())
     {
@@ -983,12 +990,17 @@ int main(int argc, char **argv)
         curev = eventid;
         tEventIter++;
     }
+
+    bench->Show("mixing");
+
+    for (int i = 0; i < evtomix; i++)
+        cout << i << "\t" << sizeof(evbuf[i]) << endl;
   
 // ##############################################################
 // # Save Histograms to files					#
 // ##############################################################  
     PRINT_MESSAGE("");
-    char bufs[kFileNameMaxChar];
+    char bufs[THGlobal::kFileNameMaxChar];
     if (pairtype == 0)
         sprintf(bufs, "%sfemtopipi%i%s.root",sEventDir.Data(), nbin, onlyprim ? "p" : "a");
     else if (pairtype == 1)
@@ -1091,7 +1103,7 @@ int main(int argc, char **argv)
     
     try 
     {
-        tLogName = tMainConfig->GetParameter("LogFile");
+        tLogName = tMainConfig.GetParameter("LogFile");
     }
     catch (TString &tError) 
     {}   
@@ -1116,7 +1128,7 @@ int main(int argc, char **argv)
 // # Temporary file						#
 // ##############################################################  
     ofstream tTmpFile;
-    char tTmpFileName[kFileNameMaxChar];
+    char tTmpFileName[THGlobal::kFileNameMaxChar];
     
     sprintf(tTmpFileName,"./femto_%i.tmp",sParentPID);
     tTmpFile.open(tTmpFileName, ios_base::app);
@@ -1126,7 +1138,7 @@ int main(int argc, char **argv)
     else 
     {
         PRINT_MESSAGE("Unable to create temp file "<<tTmpFileName);
-        exit(_ERROR_GENERAL_FILE_NOT_FOUND_);
+        exit(THGlobal::Error::generalFileNotFound);
     }
     
     return 0; 

@@ -61,7 +61,7 @@ void HBTFit::preparehist(TH1D *hist, int projType, int wType, TString type)
     if(projType < 0 || projType > 3 || wType < 1 || wType > 3)
     {
         PRINT_MESSAGE("<HBTFit::preparehist>: Unknown projection type or width");
-        exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
+        exit(THGlobal::Error::generalunsuportedValue);
     }
 
     if (!type.CompareTo("FIT")) 
@@ -75,7 +75,7 @@ void HBTFit::preparehist(TH1D *hist, int projType, int wType, TString type)
         hist->SetMarkerSize(1.0);
         hist->SetMarkerColor(2);
         hist->SetMarkerStyle(kOpenCircle);
-        hist->SetTitle(Form(";q_{%s} [GeV/c];C(q_{%s})",sProjNames[projType].Data(),sProjNames[projType].Data()));
+        hist->SetTitle(Form(";q_{%s} [GeV/c];C(q_{%s})",THGlobal::sProjNames[projType].Data(),THGlobal::sProjNames[projType].Data()));
         hist->SetMinimum(hist->GetMinimum()*0.9);
         hist->SetMaximum(hist->GetMaximum()*1.1);
         hist->GetXaxis()->SetLabelSize(0.055);
@@ -87,10 +87,10 @@ void HBTFit::preparehist(TH1D *hist, int projType, int wType, TString type)
     else
     {
         PRINT_MESSAGE("<HBTFit::preparehist>: Unknown histogram type");
-        exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
+        exit(THGlobal::Error::generalunsuportedValue);
     }
 
-    hist->SetName(Form("%sproj_%s_%d",type.Data(),sProjNames[projType].Data(),wType));
+    hist->SetName(Form("%sproj_%s_%d",type.Data(),THGlobal::sProjNames[projType].Data(),wType));
 }
 
 void HBTFit::setErrors(TH1D *hout, TH1D *hNum, TH1D *hDen)
@@ -169,7 +169,7 @@ TH1D* HBTFit::getproj(TH3D *numq, TH3D *denq, int nproj, int wbin, double norm)
             break;
         default:
             PRINT_MESSAGE("<HBTFit::getproj>: Unknown projection type");
-            exit(_ERROR_GENERAL_UNSUPORTED_VALUE_);
+            exit(THGlobal::Error::generalunsuportedValue);
     }
     
     denbuf = new TH1D(*((TH1D *) denq->Project3D(sProj)));

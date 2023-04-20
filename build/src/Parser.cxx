@@ -48,7 +48,7 @@ Parser::Parser(const char* aFileName)
   mFile.open(mFileName);
   if((!mFile) && (!mFile.is_open())) {
     PRINT_MESSAGE("<Parser::Parser>\tFile "<<mFileName<<" not found.");
-    exit(_ERROR_GENERAL_FILE_NOT_FOUND_);
+    exit(THGlobal::Error::generalFileNotFound);
   }
   PRINT_DEBUG_2("<Parser::Parser>\tReading form file "<<mFileName);
 }
@@ -58,8 +58,9 @@ Parser::~Parser()
   mFile.close();
 }
 
-void Parser::ReadINI(Configurator* aINI)
+Configurator Parser::ReadINI()
 {
+  Configurator aIni = Configurator();
   Parameter  	tOpt;
   TString	tStr;
   int		tLine;
@@ -92,9 +93,10 @@ void Parser::ReadINI(Configurator* aINI)
       tOpt.keyword += tStr[i];
     for(i++; i<tStr.Length(); i++)
       tOpt.value += tStr[i];
-    aINI->AddParameter(&tOpt);
+    aIni.AddParameter(tOpt);
     PRINT_DEBUG_2("\tLine "<<tLine<<" Parameter : "<<tOpt.keyword<<" = "<<tOpt.value);
   }
+  return aIni;
 }
 
 void Parser::ReadSHAREParticles(ParticleDB* aDB)

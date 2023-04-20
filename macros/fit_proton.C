@@ -13,7 +13,7 @@
  */
 #ifndef __CLING__
 //#include "includes_hal.h"
-#include "/home/jedkol/Downloads/HAL/analysis/femto/corrfit/CorrFit.h"
+//#include "/home/jedkol/Downloads/HAL/analysis/femto/corrfit/CorrFit.h"
 // namespace Hal {};
 #endif
 using namespace Hal;
@@ -27,6 +27,16 @@ protected:
     Double_t cf = fMaps[0]->Eval(x[0], r);
     return n * ((cf - 1.0) * l + 1);
   }
+  virtual void Paint(Bool_t repaint = kTRUE, Bool_t refresh = kTRUE) 
+  {
+      CorrFitKisiel::Paint(repaint, refresh);
+      /*float val;
+      for(int i = 1; i <= 40; i++)
+      {
+          val = (0.4/40)*i;
+          cout << Eval(val) << endl;
+      }*/
+  }
 
 public:
   MyFit() : Hal::CorrFitKisiel(3) { SkipNumErrors(); };
@@ -35,23 +45,25 @@ public:
 
 
 void fit_proton() {
-  /*  TFile* file               = new TFile("QSC_1000k_pp.root");
-    TH2D* mapH                = (TH2D*) file->Get("CF_map");
-    CorrFitMapKstarRstar* map = new CorrFitMapKstarRstar(*mapH, Hal::Femto::EKinematics::kPRF);
+  TFile* file               = new TFile("mapa_pp.root");
+    Hal::DividedHisto2D* mapH = (Hal::DividedHisto2D*) file->Get("new");
+    CorrFitMapKstarRstar* map = new CorrFitMapKstarRstar(*((TH2D*) mapH->GetHist()), Hal::Femto::EKinematics::kLCMS);
 
-  */
-  Femto1DCF* cf = new Femto1DCF("func", 100, 0, 0.1, Hal::Femto::EKinematics::kPRF);
+    TFile *dataFile = TFile::Open("./output/femtoProton.root");
+    TH1D *hInp = (TH1D*) dataFile->Get("rat1dqsc");
+
+  Femto1DCF* cf = new Femto1DCF("func", hInp->GetNbinsX(), hInp->GetXaxis()->GetXmin() , hInp->GetXaxis()->GetXmax(), Hal::Femto::EKinematics::kLCMS);
   // fill dummy data
-  for (int i = 1; i <= 100; i++) {
-    cf->GetNum()->SetBinContent(i, 1);
-    cf->GetNum()->SetBinError(i, 0.01);
-    cf->GetDen()->SetBinContent(i, 10);
-    cf->GetDen()->SetBinError(i, 0.01);
+  for (int i = 1; i <= hInp->GetNbinsX(); i++) {
+    cf->GetNum()->SetBinContent(i, hInp->GetBinContent(i));
+        cf->GetNum()->SetBinError(i, hInp->GetBinError(i));
+        cf->GetDen()->SetBinContent(i, 1);
+        cf->GetDen()->SetBinError(i, 0.);
   }
 
-  // MyFit* fit             = new MyFit();
-  CorrFit1DCF_Gauss* fit = new CorrFit1DCF_Gauss();
-  // fit->AddMap(map);
+  MyFit* fit             = new MyFit();
+  //CorrFit1DCF_Gauss* fit = new CorrFit1DCF_Gauss();
+  fit->AddMap(map);
   fit->SetRLimits(1, 10);
   // fit->SetNormLimits(0.9, 1.1);
   fit->FixParameter(fit->Norm(), 1);

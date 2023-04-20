@@ -22,8 +22,8 @@ void figureCorr()
 {
     gStyle->SetOptStat(0);
 
-    TString filePath = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/ic/output/urqmd/";
-    const int kTset[] = {0};
+    TString filePath = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/14p5GeV/0to10cent/";
+    const int kTset[] = {19};
     const int len = sizeof(kTset)/sizeof(kTset[1]);
     const TString projName[] = {"out", "side", "long"};
     const Color_t cGreen = TColor::GetColor(26,201,33);
@@ -43,7 +43,7 @@ void figureCorr()
     {
         c[iter] = new TCanvas(Form("c%d",iter),"",1500,500);
         c[iter]->Divide(3,1);
-        inFile = TFile::Open(Form("%shbtfitpipi%da.root",filePath.Data(),i));
+        inFile = TFile::Open(Form("%shbtfitpp%da.root",filePath.Data(),i));
 
         for(auto j : {0,1,2})
         {
@@ -81,7 +81,7 @@ void figureCorr()
                 leg->Draw("same");
             }
         }
-        c[iter]->SaveAs(Form("%soutGraphs/canvaspipi%da.png",filePath.Data(),i));
+        c[iter]->SaveAs(Form("%soutGraphs/canvaspp%da.png",filePath.Data(),i));
 
         iter++;
     }

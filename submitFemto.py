@@ -13,7 +13,7 @@ jobarrayfile="jobarrayFemto.dat"
 
 #------------------------------------------------------------------------#
 
-def replaceFemto(path,ptype,nBin,events): # method for creating separate femti.ini files for each job
+def replaceFemto(path,ptype,nBin,events): # method for creating separate femto.ini files for each job
     fin = open("femto_template", "rt")
     fout = open("femto.ini", "wt")
 

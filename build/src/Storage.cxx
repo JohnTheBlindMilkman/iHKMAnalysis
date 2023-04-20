@@ -17,7 +17,7 @@ Storage::Storage(TString sFileNam,TString ovrrd)
     else
     {
         PRINT_MESSAGE("<Storage::Storage>\tOverride not bool");
-        exit(_ERROR_CONFIG_PARAMETER_NOT_FOUND_);
+        exit(THGlobal::Error::configParameterNotFound);
     }
 
     tDate.Set();
