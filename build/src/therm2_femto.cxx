@@ -44,7 +44,6 @@
 #include <TDatime.h>
 #include <TBenchmark.h>
 #include <TROOT.h>
-#include "ParticleCoor.h"
 #include "StructEvent.h"
 #include "Configurator.h"
 #include "Parser.h"
@@ -76,9 +75,7 @@ TString sEventDir;
 TString sTimeStamp;
 int     sParentPID;
 
-static ParticleCoor particle1, particle2, particle1lcms, particle2lcms, particle1prf, particle2prf, buf;
-ParticleCoor **evbuf;
-ParticleCoor **evbuf2;
+static THGlobal::ParticleCoor particle1, particle2, particle1lcms, particle2lcms, particle1prf, particle2prf, buf;
 
 Int_t *evtscount;
 Int_t *evtscount2;
@@ -176,7 +173,7 @@ long double	chiim(long double eta);
 void		bfunpfun(long double eta, long double rho, long double &bret, long double &pret);
 dcomplex	GetG(long double eta, long double rho, long double hfun);
 double		GetQuantumCoulombStrong();
-void		PairKinematics(ParticleCoor part1, ParticleCoor part2);
+void		PairKinematics(THGlobal::ParticleCoor part1, THGlobal::ParticleCoor part2);
 void		MessageIntro();
 void		MessageHelp();
 void		MessageVersion();
@@ -490,25 +487,9 @@ int main(int argc, char **argv)
 // ##############################################################
 // # Allocate arrays in memory					#
 // ##############################################################
-  
-    evbuf = (ParticleCoor **) malloc(sizeof(ParticleCoor *) * evtomix);
-    evtscount = (Int_t *) malloc(sizeof(Int_t) * evtomix);
-    if (partpid2 != 0) 
-    {
-        evbuf2 = (ParticleCoor **) malloc(sizeof(ParticleCoor *) * evtomix);
-        evtscount2 = (Int_t *) malloc(sizeof(Int_t) * evtomix);
-    }
+    THGlobal::ParticleCoor particle;
+    std::vector<THGlobal::ParticleCoor> part;
 
-    for (int imix=0; imix<evtomix; imix++) 
-    {
-        evbuf[imix] = (ParticleCoor *) malloc(sizeof(ParticleCoor) * 3000); //why 3000? - JJ
-        evtscount[imix] = 0; // can't this be done simply as evtscount = {0}? - JJ
-        if (partpid2 != 0) 
-        {
-            evbuf2[imix] = (ParticleCoor *) malloc(sizeof(ParticleCoor) * 3000);
-            evtscount2[imix] = 0;
-        }
-    }
 // ##############################################################
 // # Histograms							#
 // ##############################################################
@@ -576,6 +557,8 @@ int main(int argc, char **argv)
 
     hbetat = new TH1D("hbetat", "hbetat", 100, 0.0, 1.0);
     hkt    = new TH1D("hkt",    "hkt"   , 100, 0.0, 1.2);
+
+    TH1D *wght = new TH1D("wght","wght",50,0,5);
 
     if (writesourcehists) 
     {
@@ -677,6 +660,7 @@ int main(int argc, char **argv)
     //TChain *chn   = new TChain(_PARTICLES_TREE_); JJ
     TChain *chnEv = new TChain(_EVENTS_TREE_);
     int pcount = 0;
+    int realNoFiles = 0 ;
     
     for(int i = 0; i < tEventFiles; i++) 
     {
@@ -684,7 +668,8 @@ int main(int argc, char **argv)
         sprintf(Buff,"%s%d.root",sEventDir.Data(),i);
         PRINT_DEBUG_1("Adding file: " << Buff);
         //chn->Add(Buff); JJ
-        chnEv->Add(Buff);
+        if (chnEv->Add(Buff))
+            realNoFiles++;
     }
 
     TTreeReader ttReader(chnEv);
@@ -752,7 +737,7 @@ int main(int argc, char **argv)
     PRINT_MESSAGE("["<<tDate.AsSQLString()<<"]\tMixing particles");   
     
     UInt_t eventid,curev = -1;
-    Int_t  eviter = -1;
+    Int_t  eviter = 0;
     Double_t pt, rap, peta;
     double coulombweight;
     double quantumweight;
@@ -761,240 +746,63 @@ int main(int argc, char **argv)
     
     while (ttReader.Next())
     {
-        //chn->GetEntry(iter); JJ
-        eventid = ttReader.GetCurrentEntry();
+        eviter++;
         for (int trackIter = 0; trackIter < *npart; trackIter++)
         {
-            if (eventid != curev) 
+            particle = {px[trackIter],py[trackIter],pz[trackIter],E[trackIter],x[trackIter],y[trackIter],z[trackIter],t[trackIter],id[trackIter],mid[trackIter]};
+            if (particle.id != 2212) // if not proton
+                continue;
+
+            float rap = (0.5 * log((particle.e + particle.pz) / (particle.e - particle.pz))); 
+            if (abs(rap) >= 0.7) // if rapidity not good
+                continue;
+
+            float pt = hypot(particle.px,particle.py);
+            if (pt <= 0.4 || pt >= 1.8) // if transverse momentum not good
+                continue;
+
+            float peta = -log(tan(atan2(pt,particle.pz)/2.));
+            if (peta >= 0.35) // if pseudorapidity (?) not good
+                continue;
+
+            if (particle.t > tcut)
+                continue;
+
+            part.push_back(particle);
+        }
+
+        for (std::size_t it = 0; it < part.size(); it++)
+        {
+            for (std::size_t jt = it+1; jt <part.size(); jt++)
             {
-                if (eviter > -1) 
+                PairKinematics(part[it],part[jt]);
+                if (fabs(part[it].t - part[jt].t) <= 500. && (mKT>ktmin) && (mKT<ktmax) && (mBetat>btmin) && (mBetat<btmax))
                 {
-                    if (partpid2 == 0) 
-                    {
-                        // Mix different-event particles;
-                        // for identical particle correlations
-                        for (int fiter = 0; fiter < evtscount[eviter]; fiter++) 
-                        {
-                            for (int mixiter = 0; mixiter < evtomix; mixiter++) 
-                            {
-                                if (mixiter != eviter) 
-                                {
-                                    for (int siter = 0; siter < evtscount[mixiter]; siter++) 
-                                    {
-                                        PairKinematics(evbuf[eviter][fiter],evbuf[mixiter][siter]);
-                                        if ((mKT>ktmin) && (mKT<ktmax)) 
-                                        {
-                                            hbetat->Fill(mBetat);
-                                            hkt->Fill(mKT);
-                                            cdena->Fill(mKO, mKS, mKL, 1.0);
-                                            den1d->Fill(fabs(mKStarSigned)*2.0, 1.0);
+                    //hbetat->Fill(mBetat);
+		            //hkt->Fill(mKT);
+		    
+                    quantumweight = GetQuantumCoulombStrong();
+                    num1dqsc->Fill(fabs(mKStarSigned)*2.0,quantumweight);
+                    den1d->Fill(fabs(mKStarSigned)*2.0,1.0);
+                    wght->Fill(quantumweight);
 
-                                            cdenasph->Fill(mKR, mKP, mKC);
+                    cdena->Fill(mKO, mKS, mKL, 1.0);
+                    cnumas->Fill(mKO, mKS, mKL, quantumweight);
 
-                                            if (twospin == 0) 
-                                                quantumweight = 1.0 + TMath::Cos(-mKO*mRO - mKS*mRS - mKL*mRL + mDE*mDT);
-                                            else if (twospin == 1) 
-                                            {
-                                                if (pcount ==3) 
-                                                    quantumweight = 1.0 + TMath::Cos(-mKO*mRO - mKS*mRS - mKL*mRL + mDE*mDT);
-                                                else 
-                                                    quantumweight = 1.0 - TMath::Cos(-mKO*mRO - mKS*mRS - mKL*mRL + mDE*mDT);
-                                                
-                                                pcount++;
-                                                if (pcount == 4) 
-                                                    pcount=0;
-                                            }
-                                            if (fabs(evbuf[eviter][fiter].t - evbuf[mixiter][siter].t) > 500.0)
-                                                quantumweight = 1.0;
-
-                                            cnuma->Fill(mKO, mKS, mKL, quantumweight);
-                                            num1d->Fill(fabs(mKStarSigned)*2.0, quantumweight);
-                                            
-                                            if (docoulomb) 
-                                            {
-                                                if (fabs(evbuf[eviter][fiter].t - evbuf[mixiter][siter].t) > 500.0)
-                                                {
-                                                    coulombweight = 1.0;
-                                                    coulqscpart = 1.0;
-                                                }
-                                                else if (pairtype != 2) // if not proton - JJ
-                                                    coulombweight = GetQuantumCoulomb();
-                                                else 
-                                                    coulombweight = GetQuantumCoulombStrong();
-                                                
-                                                if (coulombweight > 10.0) 
-                                                    cout << "Weigth for " << fabs(mKStarSigned) << " " << fiter << " " << siter << " " << " is " << coulombweight  << endl;
-                                                
-                                                cnumas->Fill(mKO, mKS, mKL, coulombweight);
-                                                num1dqsc->Fill(fabs(mKStarSigned)*2.0, coulombweight);
-                                                num1dc->Fill(fabs(mKStarSigned)*2.0, coulqscpart);
-                                                cnumasph->Fill(mKR, mKP, mKC, coulombweight);
-                                            }
-                                            // 		    if (fabs(mKStarSigned) < 0.1) {
-                                            // 		      double rad = hypot(evbuf[eviter][fiter].x, evbuf[eviter][fiter].y);
-                                            // 		      double phi = TMath::ATan2(evbuf[eviter][fiter].y, evbuf[eviter][fiter].x);
-                                            // 		      simage1->Fill(rad * cos(phi - pairphi), rad * sin(phi - pairphi), 1.0);
-                                            // 		      time1->Fill(evbuf[eviter][fiter].t);
-                                            // 		    }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    //Mix different-event particles
-                    //for non-identical particle correlations
-                    else 
-                    {
-                        for (int fiter=0; fiter<evtscount[eviter]; fiter++) 
-                        {
-                            for (int mixiter=0; mixiter<evtomix; mixiter++) 
-                            {
-                                for (int siter=0; siter<evtscount2[mixiter]; siter++) 
-                                {
-                                    PairKinematics(evbuf[eviter][fiter],evbuf2[mixiter][siter]);
-                                    if ((mKT>ktmin) && (mKT<ktmax) && (mBetat>btmin) && (mBetat<btmax)) 
-                                    {
-                                        hbetat->Fill(mBetat);
-                                        hkt->Fill(mKT);
-                                        
-                                        if (mKStarOut > 0.0) 
-                                            den1dp->Fill(fabs(mKStarSigned), 1.0);
-                                        else
-                                            den1dn->Fill(fabs(mKStarSigned), 1.0);
-                                        
-                                        cdenanonid->Fill(mKStarOut, mKStarSide, mKStarLong, 1);
-                                        cdenasph->Fill(mKR, mKP, mKC);
-
-                                        if (mKStarOut > 0.0) 
-                                        {
-                                            if (mixiter != eviter) 
-                                                den1dptrue->Fill(fabs(mKStarSigned), 1.0);
-                                        }
-                                        else 
-                                        {
-                                            if (mixiter != eviter) 
-                                                den1dntrue->Fill(fabs(mKStarSigned), 1.0);
-                                        } // to da się prościej - JJ
-                                        if (docoulomb) 
-                                        {
-                                            if (fabs(evbuf[eviter][fiter].t - evbuf[mixiter][siter].t) > 500.0)
-                                                coulombweight = 1.0;
-                                            else
-                                                coulombweight = GetCoulomb();
-
-                                            num1d->Fill(fabs(mKStarSigned), coulombweight); 
-                                            cnumanonid->Fill(mKStarOut, mKStarSide, mKStarLong, coulombweight);
-                                            cnumasph->Fill(mKR, mKP, mKC, coulombweight);
-                                            
-                                            if (mKStarOut > 0.0)
-                                                num1dp->Fill(fabs(mKStarSigned), coulombweight);
-                                            else
-                                                num1dn->Fill(fabs(mKStarSigned), coulombweight);
-                                            
-                                            if (mixiter == eviter) 
-                                            {
-                                                cnumanonidtrue->Fill(mKStarOut, mKStarSide, mKStarLong, coulombweight);
-                                                if (mKStarOut > 0.0)
-                                                    num1dptrue->Fill(fabs(mKStarSigned), coulombweight);
-                                                else
-                                                    num1dntrue->Fill(fabs(mKStarSigned), coulombweight);
-                                            }
-                                        }
-                                        if (fabs(mKStarSigned) < 0.1) 
-                                        {
-                                            double rad = hypot(evbuf[eviter][fiter].x, evbuf[eviter][fiter].y);
-                                            double phi = TMath::ATan2(evbuf[eviter][fiter].y, evbuf[eviter][fiter].x);
-                                            simage1->Fill(rad * cos(phi - pairphi), rad * sin(phi - pairphi), 1.0);
-                                            time1->Fill(evbuf[eviter][fiter].t);
-
-                                            rad = hypot(evbuf2[mixiter][siter].x, evbuf2[mixiter][siter].y);
-                                            phi = TMath::ATan2(evbuf2[mixiter][siter].y, evbuf2[mixiter][siter].x);
-                                            simage2->Fill(rad * cos(phi - pairphi), rad * sin(phi - pairphi), 1.0);
-                                            time2->Fill(evbuf2[mixiter][siter].t);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            
-                
-                eviter = (eviter + 1) % evtomix; // eviter is an int in the range from 0 to EventsToMix (from femto.ini) - JJ
-                cout << "\r\tevent " << tEventIter <<"/"<< tNumberOfEvents << ", particle 1 count " << evtscount[eviter];
-
-                evtscount[eviter] = 0;
-                if (partpid2 != 0) 
-                {
-                    cout << ", particle 2 count " << evtscount2[eviter];
-                    evtscount2[eviter] = 0;
-                }      
-                cout.flush();
-            }
-
-            if (((id[trackIter] == partpid) || ((id[trackIter] == partpid2) && (partpid2 !=0))) && (t[trackIter] < tcut)) 
-            {
-                pt = hypot(px[trackIter], py[trackIter]);
-                if ((((pt > ptmin1) && (pt < ptmax1) && (id[trackIter] == partpid)) || ((pt > ptmin2) && (pt < ptmax2) && (id[trackIter] == partpid2) && (partpid2 != 0))) && ((onlyprim == 0) || ((mid[trackIter] == partpid) || ((mid[trackIter] == partpid2) && (partpid2 != 0))))) 
-                {
-                    rap = 0.5*log((E[trackIter] + pz[trackIter])/(E[trackIter] - pz[trackIter]));
-                    peta = -TMath::Log(TMath::Tan(TMath::ATan2(pt, pz[trackIter])/2.0));
-                    
-                    // Check if it is coming from a weak decay
-                    isweak = 0;
-                    for (int witer = 0; witer < 16; witer++) 
-                        if (mid[trackIter] == weakpid[witer]) 
-                            isweak = 1;
-                        
-                    if ((fabs(rap) < ABSRAP) && ((fabs(peta) < ETAABS) || (nbin < 10) || (nbin > 19)) && ((!isweak) || (onlyprim == 2)))
-                    {
-                        if (id[trackIter] == partpid) // this can allocate a lot of memory that won't be used (lots of empty events) + what happens if the evtscount exceeds the 3000 mark? - JJ
-                        {// on the other hand using std::vector would slow things down significantly due to huge amounts of memory being reallocated on and on - JJ
-                            evbuf[eviter][evtscount[eviter]].x = x[trackIter]; //possible solusion: https://www.geeksforgeeks.org/using-stdvectorreserve-whenever-possible/ - JJ
-                            evbuf[eviter][evtscount[eviter]].y = y[trackIter]; 
-                            evbuf[eviter][evtscount[eviter]].z = z[trackIter];
-                            evbuf[eviter][evtscount[eviter]].t = t[trackIter];
-                            evbuf[eviter][evtscount[eviter]].px = px[trackIter];
-                            evbuf[eviter][evtscount[eviter]].py = py[trackIter];
-                            evbuf[eviter][evtscount[eviter]].pz = pz[trackIter];
-                            evbuf[eviter][evtscount[eviter]].e = E[trackIter];
-                            evbuf[eviter][evtscount[eviter]].pid = id[trackIter];
-                            evbuf[eviter][evtscount[eviter]].fatherpid = mid[trackIter];
-                            evbuf[eviter][evtscount[eviter]].rootpid = 0; // we don't use them - JJ
-                            evbuf[eviter][evtscount[eviter]].mass = 0;
-                            evbuf[eviter][evtscount[eviter]].eventid = 0;
-                            evtscount[eviter]++;
-                        }
-                        else if ((id[trackIter] == partpid2) && (partpid2 != 0)) 
-                        {
-                            evbuf2[eviter][evtscount2[eviter]].x = x[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].y = y[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].z = z[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].t = t[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].px = px[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].py = py[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].pz = pz[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].e = E[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].pid = id[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].fatherpid = mid[trackIter];
-                            evbuf2[eviter][evtscount2[eviter]].rootpid = 0;
-                            evbuf2[eviter][evtscount2[eviter]].mass = 0;
-                            evbuf2[eviter][evtscount2[eviter]].eventid = 0;
-                            evtscount2[eviter]++;
-                        }
-                    }
+                    //cdenasph->Fill(mKR, mKP, mKC);
+                    //cnumasph->Fill(mKR, mKP, mKC, quantumweight);
                 }
             }
         }
-        curev = eventid;
-        tEventIter++;
+
+        part.clear();
+        part.resize(0);
+        
+        std::cout << "Event:\t" << eviter << "/" << 600 * realNoFiles << "\r";
+        std::cout.flush();
     }
 
     bench->Show("mixing");
-
-    for (int i = 0; i < evtomix; i++)
-        cout << i << "\t" << sizeof(evbuf[i]) << endl;
   
 // ##############################################################
 // # Save Histograms to files					#
@@ -1018,6 +826,7 @@ int main(int argc, char **argv)
         cdena->Write();
         num1d->Write();
         den1d->Write();
+        wght->Write();
 
         if (docoulomb) 
         {
@@ -1886,7 +1695,7 @@ double GetQuantumCoulombStrong()
         return (0.5 * Gamow(kstar) * (2.0 * fgmods * smult + modl2(ffplus) + modl2(ffminus) + wavesign*sterm.re + wavesign*tterm.re + smult * 2 * (fcgefhs + fcgefgs)));
 }
 
-void PairKinematics(ParticleCoor part1, ParticleCoor part2)
+void PairKinematics(THGlobal::ParticleCoor part1, THGlobal::ParticleCoor part2)
 {
     // Calculate pair variables
     double tPx = part1.px+part2.px;

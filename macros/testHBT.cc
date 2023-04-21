@@ -46,7 +46,7 @@ void testHBT()
 {
     gStyle->SetOptStat(0);
 
-    const TString filepath = "/home/jedkol/Downloads/HADES/data/iHKM/femtopp19a.root";
+    const TString filepath = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/14p5GeV/0to10cent/femtopp19a.root"; //"/home/jedkol/Downloads/HADES/data/iHKM/femtopp19a.root";
     const TString outFilePath = "/home/jedkol/Downloads/HADES/iHKM/macros/output/femtoProton.root";
     const double hXmin = 0.0, hXmax = 0.2;
     const int tcBlue = TColor::GetColor("#2d7f9d"), tcRed = TColor::GetColor("#dc7684");

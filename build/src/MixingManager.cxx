@@ -35,7 +35,7 @@ void MixingManager::Start()
 {
     // do the mixing process
     // fill histograms
-    const int noFiles = 10;
+    const int noFiles = 50;
     int evNum = 0;
     TString inpDir = "/home/jedkol/lustre/hades/user/kjedrzej/iHKM/14p5GeV/0to10cent/";
     TH1D *num1dqsc = new TH1D("num1dqsc", "num1dqsc;2k* [GeV/c];C(k*)", 200, 0.0, 0.4);
@@ -134,9 +134,9 @@ std::vector<std::array<double,2>> MixingManager::Mix(const std::vector<THGlobal:
     std::vector<std::array<double,2>> weights;
     std::array<double,2> tmp = {0.,0.};
 
-    for (std::size_t it = partList.size(); it > 0; it--)
+    for (std::size_t it = 0; it < partList.size(); it++)
     {
-        for (std::size_t jt = 0; jt < it; jt++)
+        for (std::size_t jt = it + 1; jt < partList.size(); jt++)
         {
             if (!PairCut(partList[it],partList[jt]))
                 continue;

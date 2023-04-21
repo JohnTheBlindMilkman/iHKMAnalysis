@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# this macro divides a large data set of .root files into separate directories with 100 files each
+# it may be useful if one needs to speed up the calculation on e.g. computing cluster
+
 i=0;
 j=0;
 tmp=0;
 max=489;
-#543;
 DIRNAME="out_";
 NAMEND=".root";
 cd /lustre/hades/user/kjedrzej/iHKM/ic/output/urqmd
