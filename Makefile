@@ -39,7 +39,7 @@ endif
 # compilation
 CXX         = g++
 LD          = g++
-CXXFLAGS    = -std=c++11 -O0 -g -Wall -Wextra -Wpedantic -I $(DIR_H) $(PREPROCESS) `root-config --cflags`
+CXXFLAGS    = -std=c++14 -O0 -g -Wall -Wextra -Wpedantic -I $(DIR_H) $(PREPROCESS) `root-config --cflags`
 LFLAGS      = -lm -g `root-config --libs`
 
 #################################################################################
