@@ -527,7 +527,7 @@ int main(int argc, char **argv)
     TH1D *hkt;
 
     cnuma = new TH3D("cnuma","cnuma", 121, -0.201666, 0.201666, 121, -0.201666, 0.201666, 121, -0.201666, 0.201666);
-    cdena = new TH3D("cdena","cdena", 121, -0.201666, 0.201666, 121, -0.201666, 0.201666, 121, -0.201666, 0.201666);
+    cdena = new TH3D("cdena","cdena", 241, -0.4, 0.4, 241, -0.4, 0.4, 241, -0.4, 0.4);
 
     cnumasph = new TH3D("cnumasph","cnumasph", 60, 0.0, 0.2, 12, -TMath::Pi(), TMath::Pi(), 12, -1.0, 1.0);
     cdenasph = new TH3D("cdenasph","cdenasph", 60, 0.0, 0.2, 12, -TMath::Pi(), TMath::Pi(), 12, -1.0, 1.0);
