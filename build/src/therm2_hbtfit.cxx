@@ -303,7 +303,7 @@ int main(int argc, char **argv)
         ratq->Divide(numq, denq, 1.0, 1.0);
         ratq->SetName("ratq");
         ratq->SetTitle("ratq");
-        hbtFit->setErrors(ratq,numq,denq);
+        hbtFit->setErrors(ratq,numq,denq); // this has to be done on separate projections, not on 3D histogram
         ratq->Fit(funqk, "RBMPE");
 
 // ##############################################################

@@ -532,7 +532,7 @@ int main(int argc, char **argv)
     cnumasph = new TH3D("cnumasph","cnumasph", 60, 0.0, 0.2, 12, -TMath::Pi(), TMath::Pi(), 12, -1.0, 1.0);
     cdenasph = new TH3D("cdenasph","cdenasph", 60, 0.0, 0.2, 12, -TMath::Pi(), TMath::Pi(), 12, -1.0, 1.0);
 
-    cnumas = new TH3D("cnumas","cnumas", 121, -0.201666, 0.201666, 121, -0.201666, 0.201666, 121, -0.201666, 0.201666);
+    cnumas = new TH3D("cnumas","cnumas", 241, -0.4, 0.4, 241, -0.4, 0.4, 241, -0.4, 0.4);
 
     cnumanonid = new TH3D("cnumanonid","cnumanonid", 60, -0.2, 0.2, 60, -0.2, 0.2, 60, -0.2, 0.2);
     cdenanonid = new TH3D("cdenanonid","cdenanonid", 60, -0.2, 0.2, 60, -0.2, 0.2, 60, -0.2, 0.2);
